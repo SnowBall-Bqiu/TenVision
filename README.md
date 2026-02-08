@@ -176,8 +176,24 @@ auth=your_token_here&&your_key_here
 **成功示例**
 ```json
 {
-  "status": "ok",
-  "message": "验证码识别服务运行中"
+    "success": true,
+    "points": [
+        {
+            "x": 155,
+            "y": 254
+        },
+        {
+            "x": 193,
+            "y": 92
+        },
+        {
+            "x": 74,
+            "y": 173
+        }
+    ],
+    "candidates_count": 6,
+    "message": "识别成功",
+    "visualization": null
 }
 ```
 ---
