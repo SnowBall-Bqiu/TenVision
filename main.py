@@ -3,10 +3,22 @@ import numpy as np
 import sys
 import io
 import base64
-from fastapi import FastAPI, File, UploadFile
+import os
+from fastapi import FastAPI, File, UploadFile, Header, HTTPException
 from fastapi.responses import JSONResponse
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 app = FastAPI(title="验证码识别 API")
+
+
+def verify_auth(api_token: str, api_key: str) -> bool:
+    """验证API Token和API Key"""
+    auth_env = os.getenv("auth", "")
+    expected_auth = f"{api_token}&&{api_key}"
+    return auth_env == expected_auth
 
 
 def normalize_mask(binary_mask: np.ndarray, canvas_size: int = 48, symbol_size: int = 34) -> np.ndarray | None:
@@ -293,11 +305,31 @@ def process_captcha_image(image_bytes: bytes) -> dict:
 
 
 @app.post("/recognize")
-async def recognize_captcha(file: UploadFile = File(...)):
-    """验证码识别接口，通过 file 字段上传图片"""
+async def recognize_captcha(
+    file: UploadFile = File(...),
+    x_return_visualization: str = Header(default="true", alias="X-Return-Visualization"),
+    x_api_token: str = Header(default="", alias="X-API-Token"),
+    x_api_key: str = Header(default="", alias="X-API-Key")
+):
+    """验证码识别接口，通过 file 字段上传图片
+    
+    Headers:
+        X-Return-Visualization: 是否返回识别后的图片 (true/false)
+        X-API-Token: API Token
+        X-API-Key: API Key
+    """
+    # 验证认证信息
+    if not verify_auth(x_api_token, x_api_key):
+        raise HTTPException(status_code=401, detail="认证失败：无效的API Token或API Key")
+    
     try:
         image_bytes = await file.read()
         result = process_captcha_image(image_bytes)
+        
+        # 根据Header决定是否返回图片
+        if x_return_visualization.lower() == "false":
+            result["visualization"] = None
+        
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(
