@@ -41,6 +41,10 @@ git clone https://github.com/AmethystDev-Labs/TenVision.git
 # 安装依赖
 pip install opencv-python numpy
 
+#建议使用虚拟环境
+# python -m venv venv
+# 或者使用以下命令创建并激活虚拟环境，并且安装依赖
+# python -m venv ten-captcha&&ten-captcha\Scripts\activate&&pip install opencv-python numpy
 # 运行 Demo
 python main.py <输入的图片> <输出的图片位置>
 
